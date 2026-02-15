@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유튜브 ID 검색기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-gradient-1: #667eea;
+            --bg-gradient-2: #764ba2;
+            --container-bg: white;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-color: #e0e0e0;
+            --input-bg: white;
+            --info-bg: #f8f9fa;
+            --example-bg: #fff3cd;
+            --example-text: #856404;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+        }
+
+        body.dark-mode {
+            --bg-gradient-1: #1a1a2e;
+            --bg-gradient-2: #16213e;
+            --container-bg: #0f3460;
+            --text-primary: #e4e4e4;
+            --text-secondary: #b8b8b8;
+            --border-color: #2a4365;
+            --input-bg: #1a365d;
+            --info-bg: #1a365d;
+            --example-bg: #2d3748;
+            --example-text: #fbd38d;
+            --error-bg: #742a2a;
+            --error-text: #feb2b2;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            background: var(--container-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: var(--text-primary);
+            font-size: 2em;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode-toggle {
+            background: none;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: rotate(15deg) scale(1.1);
+            border-color: #667eea;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 0.9em;
+            transition: color 0.3s ease;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .youtube-button {
+            width: 100%;
+            background: #FF0000;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s;
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .youtube-button.active {
+            display: block;
+        }
+
+        .youtube-button:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 0, 0, 0.4);
+        }
+
+        .video-info {
+            background: var(--info-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .video-info.active {
+            display: block;
+        }
+
+        .video-info h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            transition: color 0.3s ease;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.3s ease;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-weight: bold;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        .value {
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+            word-break: break-all;
+        }
+
+        .info-box {
+            background: var(--info-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .info-box h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            transition: color 0.3s ease;
+        }
+
+        .examples {
+            background: var(--example-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .examples h4 {
+            color: var(--example-text);
+            margin-bottom: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .examples p {
+            color: var(--example-text);
+            transition: color 0.3s ease;
+        }
+
+        .examples code {
+            background: var(--container-bg);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+
+        .error {
+            background: var(--error-bg);
+            color: var(--error-text);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .thumbnail-container {
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .thumbnail-container.active {
+            display: block;
+        }
+
+        .thumbnail-container img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎥 유튜브 ID 검색기</h1>
+            <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                <span id="modeIcon">🌙</span>
+            </button>
+        </div>
+        <p class="subtitle">유튜브 동영상 ID를 입력하고 유튜브에서 바로 시청하세요</p>
+
+        <div class="search-box">
+            <input type="text" id="videoId" placeholder="동영상 ID를 입력하세요 (예: dQw4w9WgXcQ)" />
+            <button onclick="searchVideo()">검색</button>
+        </div>
+
+        <div class="error" id="errorMsg">
+            유효한 유튜브 동영상 ID를 입력해주세요.
+        </div>
+
+        <div class="thumbnail-container" id="thumbnailContainer">
+            <img id="thumbnail" src="" alt="동영상 썸네일">
+        </div>
+
+        <a href="#" class="youtube-button" id="youtubeButton" target="_blank">
+            ▶️ 유튜브에서 보기
+        </a>
+
+        <div class="video-info" id="videoInfo">
+            <h3>📺 동영상 정보</h3>
+            <div class="info-item">
+                <span class="label">동영상 ID</span>
+                <span class="value" id="displayId">-</span>
+            </div>
+            <div class="info-item">
+                <span class="label">유튜브 URL</span>
+                <span class="value" id="displayUrl">-</span>
+            </div>
+            <div class="info-item">
+                <span class="label">썸네일 URL</span>
+                <span class="value" id="displayThumbnail">-</span>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>📋 사용 방법</h3>
+            <div class="info-item">
+                <span class="label">1. ID 찾기</span>
+                <span class="value">유튜브 URL에서 ID 부분을 복사</span>
+            </div>
+            <div class="info-item">
+                <span class="label">2. 입력</span>
+                <span class="value">위 검색창에 ID를 붙여넣기</span>
+            </div>
+            <div class="info-item">
+                <span class="label">3. 시청</span>
+                <span class="value">"유튜브에서 보기" 버튼 클릭</span>
+            </div>
+        </div>
+
+        <div class="examples">
+            <h4>💡 유튜브 ID 찾는 방법</h4>
+            <p>URL 예시: https://www.youtube.com/watch?v=<code>dQw4w9WgXcQ</code></p>
+            <p style="margin-top: 10px;">
+                <strong>v=</strong> 뒤에 있는 부분이 동영상 ID입니다!
+            </p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                <strong>팁:</strong> 전체 URL을 붙여넣으면 자동으로 ID만 추출됩니다.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const videoIdInput = document.getElementById('videoId');
+        const youtubeButton = document.getElementById('youtubeButton');
+        const errorMsg = document.getElementById('errorMsg');
+        const videoInfo = document.getElementById('videoInfo');
+        const displayId = document.getElementById('displayId');
+        const displayUrl = document.getElementById('displayUrl');
+        const displayThumbnail = document.getElementById('displayThumbnail');
+        const thumbnailContainer = document.getElementById('thumbnailContainer');
+        const thumbnail = document.getElementById('thumbnail');
+        const modeIcon = document.getElementById('modeIcon');
+
+        // 다크모드 상태 로드
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            modeIcon.textContent = '☀️';
+        }
+
+        // Enter 키로 검색
+        videoIdInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchVideo();
+            }
+        });
+
+        // URL에서 ID 자동 추출
+        videoIdInput.addEventListener('input', function(e) {
+            let value = e.target.value.trim();
+            
+            if (value.includes('youtube.com/watch?v=')) {
+                const urlParams = new URLSearchParams(value.split('?')[1]);
+                const id = urlParams.get('v');
+                if (id) {
+                    e.target.value = id;
+                }
+            } else if (value.includes('youtu.be/')) {
+                const shortId = value.split('youtu.be/')[1].split('?')[0].split('/')[0];
+                e.target.value = shortId;
+            }
+        });
+
+        function searchVideo() {
+            const videoId = videoIdInput.value.trim();
+            
+            if (!videoId) {
+                showError('동영상 ID를 입력해주세요.');
+                return;
+            }
+
+            if (videoId.length !== 11) {
+                showError('유효하지 않은 ID입니다. 유튜브 동영상 ID는 11자리입니다.');
+                return;
+            }
+
+            // 에러 메시지 숨기기
+            errorMsg.classList.remove('active');
+
+            // 유튜브 URL 생성
+            const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+            const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+
+            // 버튼 및 정보 표시
+            youtubeButton.href = youtubeUrl;
+            youtubeButton.classList.add('active');
+            videoInfo.classList.add('active');
+            thumbnailContainer.classList.add('active');
+
+            // 정보 업데이트
+            displayId.textContent = videoId;
+            displayUrl.textContent = youtubeUrl;
+            displayThumbnail.textContent = thumbnailUrl;
+            thumbnail.src = thumbnailUrl;
+
+            // 썸네일 로드 실패 시 대체 이미지
+            thumbnail.onerror = function() {
+                this.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+            };
+
+            // 버튼으로 스크롤
+            setTimeout(() => {
+                youtubeButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.classList.add('active');
+            youtubeButton.classList.remove('active');
+            videoInfo.classList.remove('active');
+            thumbnailContainer.classList.remove('active');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                modeIcon.textContent = '☀️';
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                modeIcon.textContent = '🌙';
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+    </script>
+</body>
+</html>
